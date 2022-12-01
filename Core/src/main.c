@@ -6,10 +6,11 @@ void GPIO_init(void);
 void DAC_init(void);
 
 #define PI 3.1415f
-#define BH_SIN(x) (16*x*(PI-x)) / ( (5*PI*PI)-4*x*(PI-x) )
+#define BH_SINE(x) (16*x*(PI-x)) / ( (5*PI*PI)-4*x*(PI-x) )
 
 volatile uint8_t msEvent = 0;
 uint16_t amplitude = AMPLITUDE;
+uint8_t controlByte = 0;
 
 void TIM14_IRQHandler(void) {
 	static uint16_t counter = 0, msCounter = 0;
@@ -18,15 +19,15 @@ void TIM14_IRQHandler(void) {
 	TIM14->SR = 0;
 	// Bhaskara sine approximation
 	if (angle <= PI) {
-		sinVal = BH_SIN(angle);
+		sinVal = BH_SINE(angle);
 	} else {
-#ifdef HALFWAVE
-		sinVal = 0;
-#else
-		angle -= PI;
-		sinVal = BH_SIN(angle);
-		sinVal = fabs(sinVal);
-#endif
+		if (controlByte & halfSine) {
+			sinVal = 0;
+		} else {
+			angle -= PI;
+			sinVal = BH_SINE(angle);
+//			sinVal = fabs(sinVal);
+		}
 	}
 	sinVal *= amplitude;
 
@@ -62,10 +63,9 @@ int main(void) {
 			}
 
 			if (!key && oldKey) { // press release moment
-				if (buttonC > (SECOND/2)) { // long press
-					amplitude = AMPLITUDE;
+				if (buttonC > (2*SECOND)) { // long press
+					controlByte ^= halfSine;
 				} else if (buttonC > 5) { // press
-//					amplitude -= 200;
 					runScript = 1;
 					timeCounter = 0;
 				}
@@ -76,8 +76,9 @@ int main(void) {
 
 			if (runScript) {
 				timeCounter++;
-				amplitude = 2500;
-				if (timeCounter >= SECOND) {
+				if (timeCounter < (1*SECOND)) {
+					amplitude = 2500;
+				} else {
 					runScript = 0;
 					timeCounter = 0;
 					amplitude = AMPLITUDE;

@@ -1,14 +1,11 @@
 #ifndef _MAIN_H_
-
 #define _MAIN_H_
 
 #include "stm32f0xx.h"
 #include <stdint.h>
 
-#define HALFWAVE
-
 #define AMPLITUDE (1400)
-#if (AMPLITUDE > 4095)
+#if (AMPLITUDE > 0xffff)
 #error "Can't be bigger than 0xfff"
 #endif
 
@@ -19,5 +16,9 @@
 #define MS_TRIG (STEPS/PERIOD)
 
 #define SECOND 1000
+
+enum eControlBits {
+	halfSine = 0x01
+};
 
 #endif /* _MAIN_H_ */
