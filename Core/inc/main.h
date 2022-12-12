@@ -20,6 +20,8 @@
 
 #define SECOND 1000
 
+#define SCRIPT_POINTS 10
+
 enum eControlBits {
 	halfSine = 0x01,
 	runScript = 0x80
@@ -30,7 +32,8 @@ enum eAmplitude {
 };
 
 typedef struct {
-	uint16_t amplitude[2];
+	uint16_t amplitude;
+	uint16_t scriptAmplitude[SCRIPT_POINTS];
 	uint8_t controlByte;
 } device;
 

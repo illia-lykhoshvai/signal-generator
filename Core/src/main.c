@@ -2,6 +2,7 @@
 #include "hw.h"
 #include "interaction.h"
 
+#include "string.h"
 #include "math.h"
 
 #define PI 3.1415f
@@ -27,7 +28,7 @@ void TIM14_IRQHandler(void) {
 //			sinVal = fabs(sinVal);
 		}
 	}
-	sinVal *= devInfo.amplitude[now];
+	sinVal *= devInfo.amplitude;
 
 	DAC1->DHR12R1 = (uint16_t)lroundf(sinVal);
 	DAC1->SWTRIGR = DAC_SWTRIGR_SWTRIG1;
@@ -44,9 +45,11 @@ void TIM14_IRQHandler(void) {
 
 int main(void) {
 	static uint16_t hzCnt = 0;
-	devInfo.amplitude[old1] = AMPLITUDE;
-	devInfo.amplitude[now] = AMPLITUDE;
-	devInfo.controlByte = halfSine;
+	devInfo.amplitude = AMPLITUDE;
+	for(hzCnt = 0; hzCnt < SCRIPT_POINTS; hzCnt++) {
+		devInfo.scriptAmplitude[hzCnt] = AMPLITUDE;
+	}
+	hzCnt = 0;
 	hwInit();
 	/* Loop forever */
 	while(1) {

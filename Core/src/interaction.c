@@ -27,7 +27,7 @@ void keyReaction() {
 			devInfo.controlByte ^= halfSine;
 		} else if (buttonCnt > 5) { // press
 			devInfo.controlByte |= runScript;
-			devInfo.amplitude[old1] = devInfo.amplitude[now];
+			devInfo.scriptAmplitude[0] = devInfo.amplitude;
 			timeCnt = 0;
 		}
 		buttonCnt = 0;
@@ -43,11 +43,11 @@ void encoderReaction(void) {
 	if (newVal != oldVal) {
 		int16_t diff = newVal - oldVal;
 		if (diff > 0) { // positive change
-			if (devInfo.amplitude[now] <= (0xfff-ENCODER_STEP))
-				devInfo.amplitude[now] += ENCODER_STEP;
+			if (devInfo.amplitude <= (0xfff-ENCODER_STEP))
+				devInfo.amplitude += ENCODER_STEP;
 		} else { // negative change
-			if (devInfo.amplitude[now] >= ENCODER_STEP)
-				devInfo.amplitude[now] -= ENCODER_STEP;
+			if (devInfo.amplitude >= ENCODER_STEP)
+				devInfo.amplitude -= ENCODER_STEP;
 		}
 		oldVal = newVal;
 	}
@@ -59,11 +59,11 @@ void interfaceInteraction(void) {
 	if (devInfo.controlByte & runScript) {
 		timeCnt++;
 		if (timeCnt < SCRIPT_TIME) {
-			devInfo.amplitude[now] = SCRIPT_AMPLITUDE;
+			devInfo.amplitude = SCRIPT_AMPLITUDE;
 		} else {
 			devInfo.controlByte &= ~runScript;
 			timeCnt = 0;
-			devInfo.amplitude[now] = devInfo.amplitude[old1];
+			devInfo.amplitude = devInfo.scriptAmplitude[0];
 		}
 	} else { // else = if not script
 		encoderReaction();
