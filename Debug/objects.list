@@ -1,3 +1,5 @@
 "./CMSIS/src/system_stm32f0xx.o"
+"./Core/src/hw.o"
+"./Core/src/interaction.o"
 "./Core/src/main.o"
 "./Startup/startup_stm32f051r8tx.o"

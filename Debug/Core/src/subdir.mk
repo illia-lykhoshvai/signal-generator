@@ -5,12 +5,18 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/src/hw.c \
+../Core/src/interaction.c \
 ../Core/src/main.c 
 
 OBJS += \
+./Core/src/hw.o \
+./Core/src/interaction.o \
 ./Core/src/main.o 
 
 C_DEPS += \
+./Core/src/hw.d \
+./Core/src/interaction.d \
 ./Core/src/main.d 
 
 
@@ -21,7 +27,7 @@ Core/src/%.o Core/src/%.su: ../Core/src/%.c Core/src/subdir.mk
 clean: clean-Core-2f-src
 
 clean-Core-2f-src:
-	-$(RM) ./Core/src/main.d ./Core/src/main.o ./Core/src/main.su
+	-$(RM) ./Core/src/hw.d ./Core/src/hw.o ./Core/src/hw.su ./Core/src/interaction.d ./Core/src/interaction.o ./Core/src/interaction.su ./Core/src/main.d ./Core/src/main.o ./Core/src/main.su
 
 .PHONY: clean-Core-2f-src
 

@@ -4,9 +4,12 @@
 #include "stm32f0xx.h"
 #include <stdint.h>
 
-#define AMPLITUDE (1400)
-#if (AMPLITUDE > 0xffff)
-#error "Can't be bigger than 0xfff"
+#define SCRIPT_TIME (SECOND+(SECOND/2))
+#define SCRIPT_AMPLITUDE (AMPLITUDE*2)
+
+#define AMPLITUDE (2000)
+#if (AMPLITUDE > 0xfff) || (SCRIPT_AMPLITUDE > 0xfff)
+#error "ADC amplitude can't be bigger than 0xffff"
 #endif
 
 #define STEPS 100
@@ -18,7 +21,19 @@
 #define SECOND 1000
 
 enum eControlBits {
-	halfSine = 0x01
+	halfSine = 0x01,
+	runScript = 0x80
 };
+
+enum eAmplitude {
+	now, old1
+};
+
+typedef struct {
+	uint16_t amplitude[2];
+	uint8_t controlByte;
+} device;
+
+extern device devInfo;
 
 #endif /* _MAIN_H_ */
