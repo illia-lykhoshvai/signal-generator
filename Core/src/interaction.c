@@ -8,7 +8,7 @@
 #include "interaction.h"
 #include "hw.h"
 
-static uint16_t buttonCnt, timeCnt;
+static uint16_t buttonCnt, timeCnt, oldAmplitude;
 
 uint8_t pollKeys() {
 	if (GPIOA->IDR & GPIO_IDR_0) {
@@ -27,7 +27,7 @@ void keyReaction() {
 			devInfo.controlByte ^= halfSine;
 		} else if (buttonCnt > 5) { // press
 			devInfo.controlByte |= runScript;
-			devInfo.scriptAmplitude[0] = devInfo.amplitude;
+			oldAmplitude = devInfo.amplitude;
 			timeCnt = 0;
 		}
 		buttonCnt = 0;
@@ -54,16 +54,22 @@ void encoderReaction(void) {
 }
 
 void interfaceInteraction(void) {
+	static uint8_t scriptCounter = 0;
 	keyReaction();
 
 	if (devInfo.controlByte & runScript) {
 		timeCnt++;
-		if (timeCnt < SCRIPT_TIME) {
-			devInfo.amplitude = SCRIPT_AMPLITUDE;
+		if (timeCnt < devInfo.scriptPoint.time[scriptCounter]) {
+			devInfo.amplitude = devInfo.scriptPoint.amplitude[scriptCounter];
 		} else {
-			devInfo.controlByte &= ~runScript;
 			timeCnt = 0;
-			devInfo.amplitude = devInfo.scriptAmplitude[0];
+			scriptCounter++;
+			if ((devInfo.scriptPoint.amplitude[scriptCounter] == 0)
+					|| (devInfo.scriptPoint.time[scriptCounter] == 0)) {
+				devInfo.controlByte &= ~runScript;
+				devInfo.amplitude = oldAmplitude;
+				scriptCounter = 0;
+			}
 		}
 	} else { // else = if not script
 		encoderReaction();

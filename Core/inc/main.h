@@ -4,6 +4,10 @@
 #include "stm32f0xx.h"
 #include <stdint.h>
 
+#include "hw.h"
+#include "interaction.h"
+#include "protocol.h"
+
 #define SCRIPT_TIME (SECOND+(SECOND/2))
 #define SCRIPT_AMPLITUDE (AMPLITUDE*2)
 
@@ -27,16 +31,20 @@ enum eControlBits {
 	runScript = 0x80
 };
 
-enum eAmplitude {
-	now, old1
-};
+typedef struct scriptData {
+	uint16_t amplitude[SCRIPT_POINTS];
+	uint16_t time[SCRIPT_POINTS];
+
+	uint32_t crc;
+} scriptData_t;
 
 typedef struct {
 	uint16_t amplitude;
-	uint16_t scriptAmplitude[SCRIPT_POINTS];
+	scriptData_t scriptPoint;
 	uint8_t controlByte;
 } device;
 
 extern device devInfo;
+extern char msg[100];
 
 #endif /* _MAIN_H_ */

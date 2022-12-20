@@ -6,18 +6,21 @@
  */
 
 #include "hw.h"
-#include "main.h"
 
 void rccInit(void);
 void gpioInit(void);
 void dacInit(void);
 void encoderInit(void);
+void uartInit(void);
 
 void hwInit(void) {
 	rccInit();
 	gpioInit();
 	dacInit();
 	encoderInit();
+	uartInit();
+
+	RCC->AHBENR |= RCC_AHBENR_CRCEN;
 }
 
 // RCC input = HSI, 8Mhz -> PLL -> 48Mhz
@@ -52,6 +55,13 @@ void gpioInit(void) {
 	// PC9 = built-in LED, push-pull output
 	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 	GPIOC->MODER |= GPIO_MODER_MODER9_0;
+
+	// PA9 = USART1_TX
+	// PA10 = USART1_RX
+	GPIOA->AFR[1] |= (1 << GPIO_AFRH_AFSEL9_Pos) + (1 << GPIO_AFRH_AFSEL10_Pos);
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR9_0;
+	GPIOA->MODER &= ~(GPIO_MODER_MODER9 + GPIO_MODER_MODER10);
+	GPIOA->MODER |= (GPIO_MODER_MODER9_1 + GPIO_MODER_MODER10_1);
 }
 
 void dacInit(void) {
@@ -88,4 +98,41 @@ void encoderInit(void) {
 	TIM3->ARR = ENC_MAX;
 	// lastly - enabling counter
 	TIM3->CR1 |= TIM_CR1_CEN;
+}
+
+void uartInit(void) {
+	// 48 Mhz input
+	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+	RCC->AHBENR |= RCC_AHBENR_DMAEN;
+	USART1->BRR = 0x1388; // 9600 baud
+
+//	 rx dma
+	USART1->CR3 |= USART_CR3_DMAR;
+	DMA1_Channel3->CPAR = (uint32_t)&USART1->RDR;
+	DMA1_Channel3->CMAR = (uint32_t)rxBuffer;
+	DMA1_Channel3->CNDTR = DMA_R_SIZE;
+	DMA1_Channel3->CCR = (3 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_TCIE + DMA_CCR_EN;
+
+//	 tx dma
+	USART1->CR3 |= USART_CR3_DMAT;
+	DMA1_Channel2->CPAR = (uint32_t)&USART1->TDR;
+	DMA1_Channel2->CMAR = (uint32_t)txBuffer;
+	DMA1_Channel2->CCR = (2 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_DIR + DMA_CCR_TCIE;
+
+	NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+
+	USART1->CR1 |= USART_CR1_RE + USART_CR1_TE + USART_CR1_UE;
+}
+
+// matches with crc32
+uint32_t getCRC(uint32_t* src, uint32_t length) {
+	//reset hardware module
+	CRC->CR = CRC_CR_REV_OUT + CRC_CR_REV_IN + CRC_CR_RESET;
+
+	for (uint32_t i = 0; i < (length / sizeof(uint32_t)); i++){
+		CRC->DR = *src;
+		src++;
+	}
+
+	return ~CRC->DR;
 }

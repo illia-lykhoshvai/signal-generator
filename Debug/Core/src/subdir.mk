@@ -7,17 +7,23 @@
 C_SRCS += \
 ../Core/src/hw.c \
 ../Core/src/interaction.c \
-../Core/src/main.c 
+../Core/src/llist.c \
+../Core/src/main.c \
+../Core/src/protocol.c 
 
 OBJS += \
 ./Core/src/hw.o \
 ./Core/src/interaction.o \
-./Core/src/main.o 
+./Core/src/llist.o \
+./Core/src/main.o \
+./Core/src/protocol.o 
 
 C_DEPS += \
 ./Core/src/hw.d \
 ./Core/src/interaction.d \
-./Core/src/main.d 
+./Core/src/llist.d \
+./Core/src/main.d \
+./Core/src/protocol.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -27,7 +33,7 @@ Core/src/%.o Core/src/%.su: ../Core/src/%.c Core/src/subdir.mk
 clean: clean-Core-2f-src
 
 clean-Core-2f-src:
-	-$(RM) ./Core/src/hw.d ./Core/src/hw.o ./Core/src/hw.su ./Core/src/interaction.d ./Core/src/interaction.o ./Core/src/interaction.su ./Core/src/main.d ./Core/src/main.o ./Core/src/main.su
+	-$(RM) ./Core/src/hw.d ./Core/src/hw.o ./Core/src/hw.su ./Core/src/interaction.d ./Core/src/interaction.o ./Core/src/interaction.su ./Core/src/llist.d ./Core/src/llist.o ./Core/src/llist.su ./Core/src/main.d ./Core/src/main.o ./Core/src/main.su ./Core/src/protocol.d ./Core/src/protocol.o ./Core/src/protocol.su
 
 .PHONY: clean-Core-2f-src
 

@@ -1,9 +1,9 @@
 #include "main.h"
-#include "hw.h"
-#include "interaction.h"
 
 #include "string.h"
 #include "math.h"
+
+#include "stdio.h"
 
 #define PI 3.1415f
 #define BH_SINE(x) (16*x*(PI-x)) / ( (5*PI*PI)-4*x*(PI-x) )
@@ -25,7 +25,6 @@ void TIM14_IRQHandler(void) {
 		} else {
 			angle -= PI;
 			sinVal = BH_SINE(angle);
-//			sinVal = fabs(sinVal);
 		}
 	}
 	sinVal *= devInfo.amplitude;
@@ -34,7 +33,6 @@ void TIM14_IRQHandler(void) {
 	DAC1->SWTRIGR = DAC_SWTRIGR_SWTRIG1;
 
 	angle = ((2*PI)/STEPS)*(sineCnt++);
-//	counter++;
 	sineCnt %= STEPS;
 
 	if (++msCounter >= MS_TRIG) {
@@ -43,14 +41,15 @@ void TIM14_IRQHandler(void) {
 	}
 }
 
+uint8_t dummy[8] = {0};
+static uint16_t oldAmplitude = 0;
 int main(void) {
 	static uint16_t hzCnt = 0;
 	devInfo.amplitude = AMPLITUDE;
-	for(hzCnt = 0; hzCnt < SCRIPT_POINTS; hzCnt++) {
-		devInfo.scriptAmplitude[hzCnt] = AMPLITUDE;
-	}
-	hzCnt = 0;
+	devInfo.scriptPoint.time[0] = SCRIPT_TIME;
+	devInfo.scriptPoint.amplitude[0] = SCRIPT_AMPLITUDE;
 	hwInit();
+
 	/* Loop forever */
 	while(1) {
 		if(msEvent) {
@@ -60,6 +59,12 @@ int main(void) {
 				hzCnt = 0;
 				// LED TOGGLE
 				GPIOC->ODR ^= GPIO_ODR_9;
+				if (oldAmplitude != devInfo.amplitude) {
+					oldAmplitude = devInfo.amplitude;
+					DMA1_Channel2->CNDTR = sprintf(txBuffer,"Amplitude is: %u\n", devInfo.amplitude);
+					// start dma->tx
+					DMA1_Channel2->CCR |= DMA_CCR_EN;
+				}
 			}
 		} // msEvent
 	} // while
