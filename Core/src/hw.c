@@ -52,16 +52,15 @@ void gpioInit(void) {
 	// analog mode
 	GPIOA->MODER |= GPIO_MODER_MODER4;
 	// PA0 = USR BTN with pull up already
-	// PC9 = built-in LED, push-pull output
 	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+	// PC9 = built-in LED, push-pull output
 	GPIOC->MODER |= GPIO_MODER_MODER9_0;
 
-	// PA9 = USART1_TX
-	// PA10 = USART1_RX
-	GPIOA->AFR[1] |= (1 << GPIO_AFRH_AFSEL9_Pos) + (1 << GPIO_AFRH_AFSEL10_Pos);
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR9_0;
-	GPIOA->MODER &= ~(GPIO_MODER_MODER9 + GPIO_MODER_MODER10);
-	GPIOA->MODER |= (GPIO_MODER_MODER9_1 + GPIO_MODER_MODER10_1);
+	RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+	// PB6 = USART1_TX [AF0] + pull-up
+	// PB7 = USART1_RX [AF0]
+	GPIOB->PUPDR |= GPIO_PUPDR_PUPDR6_0;
+	GPIOB->MODER |= GPIO_MODER_MODER6_1 + GPIO_MODER_MODER7_1;
 }
 
 void dacInit(void) {
