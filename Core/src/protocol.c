@@ -9,9 +9,8 @@
 #include "llist.h"
 
 uint8_t rxBuffer[DMA_R_SIZE];
-char txBuffer[100] = {'\0'};
+char txBuffer[DMA_T_SIZE] = {'\0'};
 
-static countingSemaphore uartReadSmphr;
 static node_t* qOfPackets = NULL;
 
 void DMA1_CH2_3_DMA2_CH1_2_IRQHandler(void) {
@@ -19,10 +18,7 @@ void DMA1_CH2_3_DMA2_CH1_2_IRQHandler(void) {
 	if (DMA1->ISR & DMA_ISR_TCIF3) { // rx buffer full
 		memcpy(&localCopy, rxBuffer, sizeof(packet_t));
 		DMA1->IFCR = (0xf << 8); // clear all dma_ch3 interrupts
-		if (uartReadSmphr < 0xff) {
-			uartReadSmphr++;
-			llistAppend(&qOfPackets, &localCopy);
-		}
+		llistAppend(&qOfPackets, &localCopy);
 	} else { // tx complete
 		DMA1->IFCR = (0xf << 4); // clear all dma_ch2 interrupts
 		DMA1_Channel2->CCR &= ~DMA_CCR_EN; // stop channel to restart it later
@@ -46,17 +42,27 @@ void sendPacket(uint8_t * data, enum ePacketTypes type) {
 	memcpy(packetToSend.data, data, DATA_BYTES);
 	packetToSend.packetType = type;
 
-	packetToSend.crc = getCRC((uint32_t*)&packetToSend, sizeof(packetToSend));
+	packetToSend.crc = getCRC((uint32_t*)&packetToSend, sizeof(packetToSend)-sizeof(packetToSend.crc));
 
 	while( !uartTransmit((uint8_t*)&packetToSend, sizeof(packetToSend)) );
 }
 
-void analyzePacket(uint8_t* src) {
-	packet_t packetCopy = {0};
+void analyzePacket() {
 	uint32_t tmp = 0;
-	memcpy((uint8_t*)&packetCopy, (uint8_t*)src, sizeof(packetCopy)); // make local copy
+	packet_t packetCopy = {0};
+	node_t* head = qOfPackets;
 
-	tmp = getCRC((uint32_t*)&packetCopy, sizeof(packetCopy));
+	if (head == NULL) {
+		return;
+	}
+
+	while(head->next != NULL) {
+		head = head->next;
+	}
+
+	memcpy(&packetCopy, &head->data, sizeof(packetCopy)); // make local copy
+
+	tmp = getCRC((uint32_t*)&packetCopy, sizeof(packetCopy)-sizeof(packetCopy.crc));
 	if (tmp == packetCopy.crc) {
 		if (packetCopy.header == PACKET_READ) {
 			memcpy(packetCopy.data, &devInfo.amplitude, sizeof(devInfo.amplitude));
@@ -64,6 +70,7 @@ void analyzePacket(uint8_t* src) {
 		} else if (packetCopy.header == PACKET_WRITE){
 			switch(packetCopy.packetType) {
 			case amplitudeOperation:
+				memcpy(&devInfo.amplitude, packetCopy.data, sizeof(devInfo.amplitude));
 				break;
 			case scriptPointOperation:
 				break;
@@ -75,7 +82,9 @@ void analyzePacket(uint8_t* src) {
 		} else { // nor read, nor write
 
 		}
+		llistDeleteLast(&qOfPackets);
 	} else { // crc doesn't match
 
 	}
+
 }

@@ -28,5 +28,6 @@ uint8_t llistPush(node_t** head, NODE_DATA_TYPE* newPacket);
 uint8_t llistAppend(node_t** head, NODE_DATA_TYPE* newPacket);
 
 void llistDelete(node_t** head, uint8_t pos);
+void llistDeleteLast(node_t** head);
 
 #endif /* INC_LLIST_H_ */

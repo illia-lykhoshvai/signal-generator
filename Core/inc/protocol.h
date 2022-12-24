@@ -33,9 +33,12 @@ typedef struct packet {
 } packet_t;
 
 #define DMA_R_SIZE (sizeof(packet_t))
+#define DMA_T_SIZE 50
 extern uint8_t rxBuffer[DMA_R_SIZE];
-extern char txBuffer[100];
+extern char txBuffer[DMA_T_SIZE];
 
 typedef uint8_t countingSemaphore;
+
+void analyzePacket();
 
 #endif /* INC_PROTOCOL_H_ */

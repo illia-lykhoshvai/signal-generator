@@ -111,7 +111,7 @@ void uartInit(void) {
 	DMA1_Channel3->CPAR = (uint32_t)&USART1->RDR;
 	DMA1_Channel3->CMAR = (uint32_t)rxBuffer;
 	DMA1_Channel3->CNDTR = DMA_R_SIZE;
-	DMA1_Channel3->CCR = (3 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_TCIE + DMA_CCR_EN;
+	DMA1_Channel3->CCR = (3 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_CIRC + DMA_CCR_TCIE + DMA_CCR_EN;
 
 //	 tx dma
 	USART1->CR3 |= USART_CR3_DMAT;
@@ -127,12 +127,12 @@ void uartInit(void) {
 // matches with crc32
 uint32_t getCRC(uint32_t* src, uint32_t length) {
 	//reset hardware module
-	CRC->CR = CRC_CR_REV_OUT + CRC_CR_REV_IN + CRC_CR_RESET;
+	CRC->CR = (CRC_CR_REV_OUT + CRC_CR_REV_IN + CRC_CR_RESET);
 
 	for (uint32_t i = 0; i < (length / sizeof(uint32_t)); i++){
 		CRC->DR = *src;
 		src++;
 	}
 
-	return ~CRC->DR;
+	return (~CRC->DR);
 }

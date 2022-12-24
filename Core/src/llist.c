@@ -10,7 +10,7 @@
 /* insert in front position */
 uint8_t llistPush(node_t** head, NODE_DATA_TYPE* newPacket) {
 	// allocate new linked-list member
-	node_t* new = (node_t*)malloc(sizeof(NODE_DATA_TYPE));
+	node_t* new = (node_t*)malloc(sizeof(node_t));
 
 	if (new != NULL) {
 		// put new data in new member
@@ -32,11 +32,10 @@ uint8_t llistPush(node_t** head, NODE_DATA_TYPE* newPacket) {
 /* inserts at last position*/
 uint8_t llistAppend(node_t** head, NODE_DATA_TYPE* newPacket) {
 	// allocate new linked-list member
-	node_t* new  = (node_t*)malloc(sizeof(NODE_DATA_TYPE));
+	node_t* new  = (node_t*)malloc(sizeof(node_t));
 	if (new != NULL) {
 		// used in step 5
 		node_t* last = *head;
-
 		// put new data in new member
 		memcpy(&(new->data), newPacket, sizeof(NODE_DATA_TYPE));
 
@@ -45,7 +44,7 @@ uint8_t llistAppend(node_t** head, NODE_DATA_TYPE* newPacket) {
 
 		// if list is empty, than make new node as head
 		if (*head == NULL) {
-			*head = new;\
+			*head = new;
 			// return success
 			return 1;
 		}
@@ -56,7 +55,7 @@ uint8_t llistAppend(node_t** head, NODE_DATA_TYPE* newPacket) {
 		}
 
 		// change the next of last node
-		last->next = new;
+		last->next = (void*)new;
 
 		// return success
 		return 1;
@@ -97,4 +96,28 @@ void llistDelete(node_t** head, uint8_t pos) {
 			}
 		}
 	}
+}
+
+void llistDeleteLast(node_t** head) {
+	node_t* temp;
+	node_t* prev;
+
+	if (head == NULL){
+		return;
+	}
+
+	temp = *head;
+	prev = *head;
+
+	while(temp->next != NULL) {
+		prev = temp;
+		temp = temp->next;
+	}
+
+	prev->next = NULL;
+
+	if (temp == prev) { // if deleting first node
+		*head = NULL;
+	}
+	free(temp);
 }

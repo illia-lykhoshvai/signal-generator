@@ -55,6 +55,9 @@ int main(void) {
 		if(msEvent) {
 			msEvent = 0;
 			interfaceInteraction();
+
+			analyzePacket();
+
 			if (++hzCnt >= SECOND) {
 				hzCnt = 0;
 				// LED TOGGLE
