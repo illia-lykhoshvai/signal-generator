@@ -10,6 +10,7 @@
 void rccInit(void);
 void gpioInit(void);
 void dacInit(void);
+void pwmInit(void);
 void encoderInit(void);
 void uartInit(void);
 
@@ -17,6 +18,7 @@ void hwInit(void) {
 	rccInit();
 	gpioInit();
 	dacInit();
+	pwmInit();
 	encoderInit();
 	uartInit();
 
@@ -75,6 +77,11 @@ void dacInit(void) {
 	TIM14->DIER |= TIM_DIER_UIE;
 	NVIC_EnableIRQ(TIM14_IRQn);
 	TIM14->CR1 |= TIM_CR1_CEN;
+}
+
+
+void pwmInit(void) {
+
 }
 
 void encoderInit(void) {
