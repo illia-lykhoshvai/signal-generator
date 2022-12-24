@@ -64,6 +64,9 @@ void gpioInit(void) {
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR9_0;
 	GPIOA->MODER &= ~(GPIO_MODER_MODER9 + GPIO_MODER_MODER10);
 	GPIOA->MODER |= (GPIO_MODER_MODER9_1 + GPIO_MODER_MODER10_1);
+
+	// PA2 = TIM15_CH1
+	GPIOA->MODER |= GPIO_MODER_MODER2_1;
 }
 
 void dacInit(void) {
@@ -81,7 +84,17 @@ void dacInit(void) {
 
 
 void pwmInit(void) {
-
+	// tim15 as spwm
+	RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
+	// input clock = 48mhz
+	TIM15->ARR = (4096/PWM_DIV) - 1; // frequency
+	TIM15->CCR1 = 0; // duty cycle for start
+	TIM15->CCMR1 |= TIM_CCMR1_OC1M_2 + TIM_CCMR1_OC1M_1
+			+ TIM_CCMR1_OC1PE; // out.compare1 in pwm mode 1, preload enable
+	TIM15->CCER |= TIM_CCER_CC1E; // cap/comp.1 enable
+	TIM15->BDTR |= TIM_BDTR_MOE; // main output enable
+	TIM15->CR1 |= TIM_CR1_CEN; // counter enable
+	TIM15->EGR |= TIM_EGR_UG; // generate update
 }
 
 void encoderInit(void) {

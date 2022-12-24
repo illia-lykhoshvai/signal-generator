@@ -10,6 +10,10 @@
 
 #include "main.h"
 
+void pollKeys();
+
 void interfaceInteraction(void);
+
+void showCurrentState(uint8_t st);
 
 #endif /* INC_INTERACTION_H_ */

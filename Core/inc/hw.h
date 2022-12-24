@@ -17,6 +17,11 @@
 #define ENC_TYPE uint16_t
 #endif
 
+#define PWM_DIV 8
+#if (PWM_DIV > 4095)
+#error "PWM_DIV is incorrect"
+#endif
+
 /*
  * initializes used in project mcu peripherals
  */

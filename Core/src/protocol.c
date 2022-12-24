@@ -65,12 +65,12 @@ void analyzePacket() {
 	tmp = getCRC((uint32_t*)&packetCopy, sizeof(packetCopy)-sizeof(packetCopy.crc));
 	if (tmp == packetCopy.crc) {
 		if (packetCopy.header == PACKET_READ) {
-			memcpy(packetCopy.data, &devInfo.amplitude, sizeof(devInfo.amplitude));
+			memcpy(packetCopy.data, &devInfo.workData.amplitude[0], sizeof(devInfo.workData.amplitude[0]));
 			sendPacket(packetCopy.data, responseOperation);
 		} else if (packetCopy.header == PACKET_WRITE){
 			switch(packetCopy.packetType) {
 			case amplitudeOperation:
-				memcpy(&devInfo.amplitude, packetCopy.data, sizeof(devInfo.amplitude));
+				memcpy(&devInfo.workData.amplitude[0], packetCopy.data, sizeof(devInfo.workData.amplitude[0]));
 				break;
 			case scriptPointOperation:
 				break;
