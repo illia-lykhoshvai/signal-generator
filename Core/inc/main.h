@@ -26,25 +26,35 @@
 
 #define SCRIPT_POINTS 10
 
+#define CHANNELS 4
+
 enum eControlBits {
-	halfSine = 0x01,
+	halfSine1 = 0x01,
+	halfSine2 = 0x02,
+	halfSine3 = 0x04,
+	halfSine4 = 0x04,
 	runScript = 0x80
 };
 
-typedef struct scriptData {
-	uint16_t amplitude[SCRIPT_POINTS];
+typedef struct mainData {
+	uint16_t amplitude[CHANNELS];
+	uint16_t phase[CHANNELS];
+
+	uint16_t scriptAmplitude[SCRIPT_POINTS];
 	uint16_t time[SCRIPT_POINTS];
 
 	uint32_t crc;
-} scriptData_t;
+} workData_t;
 
 typedef struct {
-	uint16_t amplitude;
-	scriptData_t scriptPoint;
+	uint32_t flashCounter;
+	workData_t workData;
 	uint8_t controlByte;
+	uint8_t currChannel;
 } device;
 
 extern device devInfo;
 extern char msg[100];
+extern uint16_t pwmBuffer[CHANNELS];
 
 #endif /* _MAIN_H_ */
