@@ -7,11 +7,12 @@
 
 #define PI 3.1415f
 #define BH_SINE(x) (16*x*(PI-x)) / ( (5*PI*PI)-4*x*(PI-x) )
-static float sinTable[(STEPS/2)] = {0};
+static float sinTable[(STEPS/2)];
 
 volatile uint8_t msEvent = 0;
 device devInfo = {0};
 
+uint16_t pwmBuffer[CHANNELS];
 void TIM14_IRQHandler(void) {
 	static uint16_t msCounter, sineCounter, halfSineFlag;
 	uint16_t temp[CHANNELS];
@@ -30,13 +31,9 @@ void TIM14_IRQHandler(void) {
 				temp[i] = 0;
 			}
 		}
+		pwmBuffer[i] = temp[i]/PWM_DIV;
 	}
 	sineCounter = (sineCounter+1) % (STEPS/2);
-
-	TIM1->CCR1 = temp[0]/PWM_DIV;
-	TIM1->CCR2 = temp[1]/PWM_DIV;
-	TIM1->CCR3 = temp[2]/PWM_DIV;
-	TIM1->CCR4 = temp[3]/PWM_DIV;
 
 	// used for I
 	DAC1->DHR12R1 = temp[1]; // if halfSine
@@ -52,10 +49,9 @@ uint8_t dummy[8] = {0};
 int main(void) {
 	static uint16_t hzCnt = 0;
 
-	devInfo.workData.amplitude[0] = AMPLITUDE;
-	devInfo.workData.amplitude[1] = AMPLITUDE;
-	devInfo.workData.amplitude[2] = AMPLITUDE;
-	devInfo.workData.amplitude[3] = AMPLITUDE;
+	for(uint8_t i = 0; i < CHANNELS; i++) {
+		devInfo.workData.amplitude[i] = AMPLITUDE;
+	}
 	devInfo.workData.phase[1] = 50;
 	devInfo.workData.time[0] = SCRIPT_TIME;
 	devInfo.workData.scriptAmplitude[0] = SCRIPT_AMPLITUDE;

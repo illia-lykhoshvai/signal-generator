@@ -55,5 +55,6 @@ typedef struct {
 
 extern device devInfo;
 extern char msg[100];
+extern uint16_t pwmBuffer[CHANNELS];
 
 #endif /* _MAIN_H_ */

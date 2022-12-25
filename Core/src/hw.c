@@ -16,6 +16,9 @@ void uartInit(void);
 
 void hwInit(void) {
 	rccInit();
+
+	RCC->AHBENR |= RCC_AHBENR_DMAEN;
+
 	gpioInit();
 	dacInit();
 	pwmInit();
@@ -95,17 +98,26 @@ void pwmInit(void) {
 	TIM1->CCR1 = 0; // duty cycle for start
 	TIM1->CCR2 = 0;
 	TIM1->CCMR1 |= (6 << TIM_CCMR1_OC1M_Pos) + TIM_CCMR1_OC1PE +
-			(6 << TIM_CCMR1_OC2M_Pos) + TIM_CCMR1_OC2PE;// out.compare1 in pwm mode 1, preload enable
+			(6 << TIM_CCMR1_OC2M_Pos) + TIM_CCMR1_OC2PE;// out.compare1&2 in pwm mode 1, preload enable
 
 	TIM1->CCR3 = 0;
 	TIM1->CCR4 = 0;
 	TIM1->CCMR2 |= (6 << TIM_CCMR2_OC3M_Pos) + TIM_CCMR2_OC3PE +
-			(6 << TIM_CCMR2_OC4M_Pos) + TIM_CCMR2_OC4PE;// out.compare1 in pwm mode 1, preload enable
+			(6 << TIM_CCMR2_OC4M_Pos) + TIM_CCMR2_OC4PE;// out.compare3&4 in pwm mode 1, preload enable
 
 	TIM1->CCER |= TIM_CCER_CC1E + TIM_CCER_CC2E + TIM_CCER_CC3E + TIM_CCER_CC4E; // cap/comp.1 enable
 	TIM1->BDTR |= TIM_BDTR_MOE; // main output enable
+	TIM1->DIER |= 0x1E00; // enable DMA on all 4 channels
 	TIM1->CR1 |= TIM_CR1_CEN; // counter enable
 	TIM1->EGR |= TIM_EGR_UG; // generate update
+
+	// dma transfer
+	DMA1_Channel5->CPAR = (uint32_t)&TIM1->CCR1;
+	DMA1_Channel5->CMAR = (uint32_t)pwmBuffer;
+	DMA1_Channel5->CNDTR = CHANNELS;
+	DMA1_Channel5->CCR = (3 << DMA_CCR_PL_Pos) + DMA_CCR_MSIZE_0 + DMA_CCR_PSIZE_1
+			+ DMA_CCR_MINC + DMA_CCR_PINC + DMA_CCR_DIR
+			+ DMA_CCR_CIRC + DMA_CCR_EN;
 }
 
 void encoderInit(void) {
@@ -134,7 +146,6 @@ void encoderInit(void) {
 void uartInit(void) {
 	// 48 Mhz input
 	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
-	RCC->AHBENR |= RCC_AHBENR_DMAEN;
 	USART1->BRR = 0x1388; // 9600 baud
 
 //	 rx dma
@@ -142,13 +153,13 @@ void uartInit(void) {
 	DMA1_Channel3->CPAR = (uint32_t)&USART1->RDR;
 	DMA1_Channel3->CMAR = (uint32_t)rxBuffer;
 	DMA1_Channel3->CNDTR = DMA_R_SIZE;
-	DMA1_Channel3->CCR = (3 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_CIRC + DMA_CCR_TCIE + DMA_CCR_EN;
+	DMA1_Channel3->CCR = (2 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_CIRC + DMA_CCR_TCIE + DMA_CCR_EN;
 
 //	 tx dma
 	USART1->CR3 |= USART_CR3_DMAT;
 	DMA1_Channel2->CPAR = (uint32_t)&USART1->TDR;
 	DMA1_Channel2->CMAR = (uint32_t)txBuffer;
-	DMA1_Channel2->CCR = (2 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_DIR + DMA_CCR_TCIE;
+	DMA1_Channel2->CCR = (1 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_DIR + DMA_CCR_TCIE;
 
 	NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
