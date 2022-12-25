@@ -26,7 +26,7 @@
 
 #define SCRIPT_POINTS 10
 
-#define CHANNELS 2
+#define CHANNELS 4
 
 enum eControlBits {
 	halfSine1 = 0x01,

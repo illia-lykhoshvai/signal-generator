@@ -20,7 +20,7 @@ void hwInit(void) {
 	dacInit();
 	pwmInit();
 	encoderInit();
-	uartInit();
+//	uartInit();
 
 	RCC->AHBENR |= RCC_AHBENR_CRCEN;
 }
@@ -58,15 +58,18 @@ void gpioInit(void) {
 	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 	GPIOC->MODER |= GPIO_MODER_MODER9_0;
 
+	// TIM1 PA8..11 = [AF2]
+	GPIOA->AFR[1] |= (2 << GPIO_AFRH_AFSEL8_Pos) + (2 << GPIO_AFRH_AFSEL9_Pos)
+			+ (2 << GPIO_AFRH_AFSEL10_Pos) + (2 << GPIO_AFRH_AFSEL11_Pos);
+	GPIOA->MODER |= GPIO_MODER_MODER8_1 + GPIO_MODER_MODER9_1 +
+			GPIO_MODER_MODER10_1 + GPIO_MODER_MODER11_1;
+
 	// PA9 = USART1_TX
 	// PA10 = USART1_RX
-	GPIOA->AFR[1] |= (1 << GPIO_AFRH_AFSEL9_Pos) + (1 << GPIO_AFRH_AFSEL10_Pos);
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR9_0;
-	GPIOA->MODER &= ~(GPIO_MODER_MODER9 + GPIO_MODER_MODER10);
-	GPIOA->MODER |= (GPIO_MODER_MODER9_1 + GPIO_MODER_MODER10_1);
-
-	// PA2 = TIM15_CH1
-	GPIOA->MODER |= GPIO_MODER_MODER2_1;
+//	GPIOA->AFR[1] |= (1 << GPIO_AFRH_AFSEL9_Pos) + (1 << GPIO_AFRH_AFSEL10_Pos);
+//	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR9_0;
+//	GPIOA->MODER &= ~(GPIO_MODER_MODER9 + GPIO_MODER_MODER10);
+//	GPIOA->MODER |= (GPIO_MODER_MODER9_1 + GPIO_MODER_MODER10_1);
 }
 
 void dacInit(void) {
@@ -84,17 +87,25 @@ void dacInit(void) {
 
 
 void pwmInit(void) {
-	// tim15 as spwm
-	RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;
-	// input clock = 48mhz
-	TIM15->ARR = (4096/PWM_DIV) - 1; // frequency
-	TIM15->CCR1 = 0; // duty cycle for start
-	TIM15->CCMR1 |= TIM_CCMR1_OC1M_2 + TIM_CCMR1_OC1M_1
-			+ TIM_CCMR1_OC1PE; // out.compare1 in pwm mode 1, preload enable
-	TIM15->CCER |= TIM_CCER_CC1E; // cap/comp.1 enable
-	TIM15->BDTR |= TIM_BDTR_MOE; // main output enable
-	TIM15->CR1 |= TIM_CR1_CEN; // counter enable
-	TIM15->EGR |= TIM_EGR_UG; // generate update
+	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+	//	input clock = 48mhz
+	//	TIM15->ARR = (4096/PWM_DIV) - 1; // frequency
+	TIM1->ARR = (4096/PWM_DIV) - 1; // frequency
+
+	TIM1->CCR1 = 0; // duty cycle for start
+	TIM1->CCR2 = 0;
+	TIM1->CCMR1 |= (6 << TIM_CCMR1_OC1M_Pos) + TIM_CCMR1_OC1PE +
+			(6 << TIM_CCMR1_OC2M_Pos) + TIM_CCMR1_OC2PE;// out.compare1 in pwm mode 1, preload enable
+
+	TIM1->CCR3 = 0;
+	TIM1->CCR4 = 0;
+	TIM1->CCMR2 |= (6 << TIM_CCMR2_OC3M_Pos) + TIM_CCMR2_OC3PE +
+			(6 << TIM_CCMR2_OC4M_Pos) + TIM_CCMR2_OC4PE;// out.compare1 in pwm mode 1, preload enable
+
+	TIM1->CCER |= TIM_CCER_CC1E + TIM_CCER_CC2E + TIM_CCER_CC3E + TIM_CCER_CC4E; // cap/comp.1 enable
+	TIM1->BDTR |= TIM_BDTR_MOE; // main output enable
+	TIM1->CR1 |= TIM_CR1_CEN; // counter enable
+	TIM1->EGR |= TIM_EGR_UG; // generate update
 }
 
 void encoderInit(void) {

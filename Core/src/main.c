@@ -13,7 +13,7 @@ volatile uint8_t msEvent = 0;
 device devInfo = {0};
 
 void TIM14_IRQHandler(void) {
-	static uint16_t msCounter, sineCounter, halfSineFlag[CHANNELS];
+	static uint16_t msCounter, sineCounter, halfSineFlag;
 	uint16_t temp[CHANNELS];
 
 	TIM14->SR = 0;
@@ -24,16 +24,19 @@ void TIM14_IRQHandler(void) {
 
 		if (devInfo.controlByte & (halfSine1 << i)) {
 			if (sineCounter == devInfo.workData.phase[i]) {
-				halfSineFlag[i] ^= (1 << i);
+				halfSineFlag ^= (1 << i);
 			}
-			if (halfSineFlag[i] & (1 << i)) {
+			if (halfSineFlag & (1 << i)) {
 				temp[i] = 0;
 			}
 		}
 	}
 	sineCounter = (sineCounter+1) % (STEPS/2);
 
-	TIM15->CCR1 = temp[0]/PWM_DIV;
+	TIM1->CCR1 = temp[0]/PWM_DIV;
+	TIM1->CCR2 = temp[1]/PWM_DIV;
+	TIM1->CCR3 = temp[2]/PWM_DIV;
+	TIM1->CCR4 = temp[3]/PWM_DIV;
 
 	// used for I
 	DAC1->DHR12R1 = temp[1]; // if halfSine
@@ -46,17 +49,16 @@ void TIM14_IRQHandler(void) {
 }
 
 uint8_t dummy[8] = {0};
-static uint16_t oldAmplitude = 0;
 int main(void) {
 	static uint16_t hzCnt = 0;
 
 	devInfo.workData.amplitude[0] = AMPLITUDE;
 	devInfo.workData.amplitude[1] = AMPLITUDE;
+	devInfo.workData.amplitude[2] = AMPLITUDE;
+	devInfo.workData.amplitude[3] = AMPLITUDE;
 	devInfo.workData.phase[1] = 50;
 	devInfo.workData.time[0] = SCRIPT_TIME;
 	devInfo.workData.scriptAmplitude[0] = SCRIPT_AMPLITUDE;
-
-	devInfo.controlByte = halfSine2;
 
 	for (uint32_t i = 0; i < (STEPS/2); i++) {
 		float angle = (PI/(STEPS/2))*i;
@@ -83,14 +85,14 @@ int main(void) {
 			interfaceInteraction();
 			pollKeys();
 
-			analyzePacket();
+//			analyzePacket();
 
 			devInfo.flashCounter++;
 			showCurrentState(devInfo.currChannel);
 
 			if (++hzCnt >= SECOND) {
 				hzCnt = 0;
-//				GPIOC->ODR ^= GPIO_ODR_9;
+				GPIOC->ODR ^= GPIO_ODR_9;
 //				if (oldAmplitude != devInfo.amplitude) {
 //					oldAmplitude = devInfo.amplitude;
 //					DMA1_Channel2->CNDTR = sprintf(txBuffer,"Amplitude is: %u\n", devInfo.amplitude);
