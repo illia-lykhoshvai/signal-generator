@@ -58,8 +58,8 @@ void gpioInit(void) {
 	GPIOA->MODER |= GPIO_MODER_MODER4;
 	// PA0 = USR BTN with pull up already
 	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-	// PC9 = built-in LED, push-pull output
-	GPIOC->MODER |= GPIO_MODER_MODER9_0;
+	// PC(8|9) = built-in LED, push-pull output
+	GPIOC->MODER |= GPIO_MODER_MODER8_0 + GPIO_MODER_MODER9_0;
 
 	RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
 	// PB6 = USART1_TX [AF0] + pull-up
@@ -71,6 +71,8 @@ void gpioInit(void) {
 			+ (2 << GPIO_AFRH_AFSEL10_Pos) + (2 << GPIO_AFRH_AFSEL11_Pos);
 	GPIOA->MODER |= GPIO_MODER_MODER8_1 + GPIO_MODER_MODER9_1 +
 			GPIO_MODER_MODER10_1 + GPIO_MODER_MODER11_1;
+	GPIOA->OSPEEDR = GPIO_OSPEEDER_OSPEEDR8 + GPIO_OSPEEDER_OSPEEDR9 +
+			GPIO_OSPEEDER_OSPEEDR10 + GPIO_OSPEEDER_OSPEEDR11;
 }
 
 void dacInit(void) {
@@ -155,11 +157,11 @@ void uartInit(void) {
 
 //	 tx dma
 	USART1->CR3 |= USART_CR3_DMAT;
-	DMA1_Channel2->CPAR = (uint32_t)&USART1->TDR;
-	DMA1_Channel2->CMAR = (uint32_t)txBuffer;
-	DMA1_Channel2->CCR = (1 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_DIR + DMA_CCR_TCIE;
+//	DMA1_Channel2->CPAR = (uint32_t)&USART1->TDR;
+//	DMA1_Channel2->CMAR = (uint32_t)txBuffer;
+//	DMA1_Channel2->CCR = (1 << DMA_CCR_PL_Pos) + DMA_CCR_MINC + DMA_CCR_DIR + DMA_CCR_TCIE;
 
-	NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+//	NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
 	USART1->CR1 |= USART_CR1_RE + USART_CR1_TE + USART_CR1_UE;
 }

@@ -10,6 +10,12 @@
 
 #include "main.h"
 
+enum Keys {
+	keyNo = 0,
+	keyBoard = 1,
+	keyEncoder = 2
+};
+
 void pollKeys();
 
 void interfaceInteraction(void);
